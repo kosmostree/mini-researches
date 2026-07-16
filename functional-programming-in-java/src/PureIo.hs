@@ -6,3 +6,6 @@ greet = do
   putStrLn "이름은?"
   name <- getLine 
   putStrLn ("내 이름은: " ++ name)
+
+main :: IO ()
+main = greet
