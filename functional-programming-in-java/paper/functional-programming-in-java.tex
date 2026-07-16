@@ -5,11 +5,13 @@
 \documentclass[runningheads]{llncs}
 %
 \usepackage[T1]{fontenc}
+\usepackage{float}
 % T1 fonts will be used to generate the final print and online PDFs,
 % so please use T1 fonts in your manuscript whenever possible.
 % Other font encondings may result in incorrect characters.
 %
 \usepackage{graphicx}
+\usepackage{subcaption}
 % Used for displaying a sample figure. If possible, figure files should
 % be included in EPS format.
 %
@@ -83,7 +85,7 @@ $\lambda x.M$을 예로 들어봅시다. 해당 expression에는 다음과 같�
 \noindent \\
 - $\lambda x.M$는 $\lambda$ abstraction이라고 부르며, 함수를 정의합니다. $\lambda$는 abstract operator라고 불립니다.
 \noindent \\
-- x를 variable이라 합니다. Free variable과 bounded variable로 구분할 수 있습니다.
+- x를 variable이라 합니다. Free variable과 bound variable로 구분할 수 있습니다.
 \noindent \\
 - M은 function의 body입니다. Input 없는 함수의 경우 단순히 M만으로 표현 될 수가 있습니다.
 
@@ -93,14 +95,14 @@ $\lambda x.M$을 예로 들어봅시다. 해당 expression에는 다음과 같�
 \noindent \\
 예를 들어 $\lambda x.x$는 Identity로 입력 값을 그대로 output하며  $\lambda x.x+1$은 입력값 + 1을 주는 function입니다. 
 Variable은 free variable과 bound variable로 분류됩니다. 
-Variable의 substitution 작업의 경우 $M[x:N]$의 형태로 표현되며, $\lambda y.M[x:=N]$의 경우 y가 N의 free variable의 set(i.e. FV(N))에 속할 경우 $\alpha$-renaming이 진행됩니다.
+Variable의 substitution 작업의 경우 $M[x:=N]$의 형태로 표현되며, $\lambda y.M[x:=N]$의 경우 y가 N의 free variable의 set(i.e. FV(N))에 속할 경우 $\alpha$-renaming이 진행됩니다.
 
 \noindent \\
 $\alpha$-equivalence는 bound variable의 이름 변경이 되어도 같은 lambda term이라는 것을 표현 합니다.
 
 \noindent \\
 $\beta$-reduction은 $(\lambda x.t)s$ 형태의 application인 $\beta$-redex가 $t[x:=s]$로 reduce 되는 것입니다. 예시로:\\
-$(\lambda x.x)s -> x[x:=s] -> s$가 있습니다.
+$(\lambda x.x)s ->\beta$ $x[x:=s] -> s$가 있습니다.
 
 \noindent \\
 Currying은 여러 개의 argument를 받아들이는 function을 단일 argument를 받는 function의 sequence로 만드는 것입니다.
@@ -125,8 +127,8 @@ Functional 프로그래밍의 주요 특징으로는 다음이 있습니다\cite
 \noindent
 \\
 언어 구현 상 및 FP로 개발시의 특징으로는 다음이 있습니다: \\
-- Hindley-Miller type 시스템을 이용해 type 표현 -> Haskell 등\cite{ref_wiki_hindley_milner_type_system}\\
-- Recustion: Loop의 경우 FP에서는 일반적으로 Recursion을 통해 이루어짐 \\
+- Hindley-Milner type 시스템을 이용해 type 표현 -> Haskell 등\cite{ref_wiki_hindley_milner_type_system}\\
+- Recursion: Loop의 경우 FP에서는 일반적으로 Recursion을 통해 이루어짐 \\
 
 \section{Java에서의 Functional 프로그래밍}
 
@@ -162,7 +164,7 @@ public class LambdaBetaReduction {
 
 \noindent
 \\
-Java8 이후 추가된 Function interface와 anonymous function을 활용하여야 합니다.
+Java8 이후 추가된 Function interface와 lambda expression을 활용하여야 합니다.
 
 \subsection{Immutable 데이터와 pure function에 대해}
 
@@ -170,25 +172,105 @@ Referential transparency를 위해선 function이 pure해야 합니다. Function
 
 \noindent
 \\
+Haskell의 경우, 기본적으로 모든 데이터가 immutable합니다. List와 같은 데이터 역시 add나 remove 등의 작업이 없습니다\cite{ref_haskell_list}.
+반면 Java의 record의 경우 기본적으로 class만 immutable하며 내부 object의 경우 재 reference는 불가하지만 그 reference된 주소의 데이터는 변경이 가능합니다.
+
+\noindent
+\\
+Java에서 데이터를 immutable하게 하기 위해서는 List.copyOf 등의 방법으로 그러한 데이터의 변경 역시 불가하게 하는 방법으로 일일히 고정시켜줘야 합니다.
 
 \section{Java로 Haskell의 feature 따라하기}
 
 \subsection{Java Optional과 Haskell Maybe}
 
+Object의 reference가 null일 수 있는 Java와 달리 Haskell에는 null 타입이 없습니다. 
+아무 것도 없는 상태를 처리하고 싶을 때에는 Maybe 타입을 사용합니다. 
+
+\begin{lstlisting}[language=Haskell]
+data Maybe a = Nothing | Just a
+\end{lstlisting}
+
+\noindent
+Maybe Int 필요한 경우 → Just 5 \\
+그런데 없는 경우 → Nothing
+
+\noindent
+\\
+Java에서는 Optional을 이용해 비슷하게 표현 가능합니다.
+
+\begin{lstlisting}[language=Java]
+Optional<A>
+\end{lstlisting}
+
+\noindent
+\\
+Optional<Integer>가 5인 경우 → Optional.of(5) \\
+Optional<Integer>가 없는 경우 → Optional.empty()
+
+
 \subsection{Side Effect에 대하여}
+
+Operation이나 expression이 입력을 읽고 value를 return하는 것 외에 외부적인 effect를 가진다면 side effect가 있다고 부릅니다. \cite{ref_wiki_side_effect_free}.
+I/O 작업 등이 대표적인 예시입니다. Haskell은 IO를 type을 통해 외부와 소통하며. I/O 시스템 자체 역시 purely functional 합니다\cite{ref_haskell_io}. 이를 통해 side-effect를 프로그램이 아닌 IO의 실행으로만 한정 하게 됩니다.
+
+\noindent
+\\
+Java에서는 I/O를 function으로 감싸는 것 자체는 다음과 같이 흉내가 가능합니다. LaTeX 코드 컴파일 에러가 떠서 이미지로 대체합니다.
+
+\begin{figure}[H]
+    \centering
+    % Top Image
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{haskell-io.png}
+        \caption{Haskell}
+        \label{fig:top}
+    \end{subfigure}
+    
+    \vspace{0.5cm}
+    
+    % Bottom Image
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{java-io.png}
+        \caption{Java}
+        \label{fig:bottom}
+    \end{subfigure}
+    
+    \caption{IO 작업}
+    \label{fig:stacked}
+\end{figure}
+
+\noindent
+하지만 function으로 감싸는 것 외에 이것을 구조적으로 Haskell IO처럼 연결 시키고 있지 않습니다. 
+또 Java는 이것이 컴파일러에서 강제 되지가 않고 그냥 SystemOut이나 Scanner를 바로 쓸 수 있습니다.
 
 \section{결과}
 
 Java8에서 Functional 인터페이스와 lambda expression이 추가된 이후, 자바에서 functional 프로그래밍을 하는 것이 한결 편해졌습니다.
-하지만, Java의 경우 기본적으로 object-oriented 프로그래밍을 중심으로 한 언어로, 
+하지만, Java의 경우 기본적으로 object-oriented 프로그래밍을 중심으로 한 언어로, functional 프로그래밍을 하기 위해서는 많은 boilerplate이 필요하며, 
+기본적으로 해당 언어에서 쓰이는 object및 method를 중심으로 한 프로그래밍과 괴리가 큽니다. 
+
+\noindent
+\\ 또한, Java에서 Optional, Stream 등으로 비슷하게 표현이 가능한 점도 Haskell 등의 FP 언어와의 컴파일러 상의 차이로 인해 강제되지 않고 확인이 어려운 점이 있습니다.
+이로 인해 pure function이나 side-effect free, lazy evaluation도 얼핏 보기엔 똑같이 구현되어 보이지만 내부적으로 또는 그를 받아 이용하는 방식이 근본적으로 차이가 큰 경우가 많습니다.
+ 
+\section{후속 연구}
+앞서까지 Java에서의 Functional 프로그래밍에 대하여 알아보았습니다.
+Java와 functional 프로그래밍 및 Haskell과의 비교는 그 내용이 무척 방대하며 구현 내지 비슷한 표현이 됨을 보이는 것은 단순하지만 어렵다는 점을 주장하기에는 추가 조사가 많이 필요해 보입니다.
+시간 상의 제약으로 인해 이번 Java에서의 Functional 프로그래밍과 Haskell과의 비교는 큰 틀에서만 진행이 되었습니다.
 
 \noindent
 \\
-또한, 
+후에,  Java에서 지원이 부족한 Monad들의 연결과 부재한 typeclass, higher-kinded types에 대한 해결법에 대해 알아보려 합니다. 
+Object-Functional 라이브러리라 말하는 Vavr\cite{ref_vavr_website}가 이러한 문제를 해결할 수 있는지, 
+그리고 본 연구에서 지저분하다 말한 Java에서의 functional 프로그래밍을 깔끔히 만들 수 있는지를 위주로 알아 보려합니다.
+또한, Java 컴파일러가 잡아주지 못 하는 side-effect에 대한 해결 방안이 있는지에 대해서도 조사를 해볼 예정입니다.
 
-\section{후속 연구}
-
-앞서까지 Java에서의 Functional 프로그래밍에 대하여 알아보았습니다. 
+\noindent
+\\
+또한 본 연구의 주제인 Java에서의 functional 프로그래밍과 별도로, Haskell에서의 다양한 syntax를 typed lambda calculus로 mapping 해 보는 것과
+각자 functional 프로그래밍 언어인 Haskell과 OCaml 간의 비교도 진행해 보고 싶습니다.
 
 \section{사용된 툴 맟 코드}
 
@@ -273,6 +355,15 @@ Wikipedia Purely functional data structure 페이지, \url{https://en.wikipedia.
 
 \bibitem{ref_wiki_hindley_milner_type_system}
 Wikipedia Hindley Milner type system 페이지, \url{https://en.wikipedia.org/wiki/Hindley%E2%80%93Milner_type_system}, last accessed 2026/07/15
+
+\bibitem{ref_haskell_list}
+Haskell.org의 Data.List Docs 페이지, \url{https://hackage-content.haskell.org/package/base-4.22.0.0/docs/Data-List.html},last accessed 2026/07/16
+
+\bibitem{ref_wiki_side_effect_free}
+Wikipedia Side effect 페이지, \url{https://en.wikipedia.org/wiki/Side_effect_(computer_science)},last accessed 2026/07/16
+
+\bibitem{ref_haskell_io}
+Haskell.org IO 튜토리얼, \url{https://www.haskell.org/tutorial/io.html},last accessed 2026/07/16
 
 \end{thebibliography}
 \end{document}
