@@ -2,3 +2,12 @@ target/
 .idea/
 *.iml
 *.log
+output/
+target/
+
+# output files for LaTeX
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
